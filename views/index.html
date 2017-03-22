@@ -1,0 +1,204 @@
+<!-- dummy data: the preset map markers, the current itinerary, the day-switch buttons after day 1, the options for each select menu, etc. -->
+
+{% extends 'layout.html' %}
+
+{% block title %}Your Trip{% endblock %}
+
+{% block content %}
+
+
+<div id="app" class="clearfix">
+  <div class="map-container col-sm-8 col-lg-9">
+    <div>
+      <div id="map-canvas"></div>
+    </div>
+  </div>
+  <div id="control-panel" class="col-sm-4 col-lg-3 clearfix">
+    <div class="col-xs-6 col-sm-12">
+      <div class="panel panel-default">
+        <div class="panel-body" id="options-panel">
+          <div>
+            <h4>Hotels</h4>
+
+
+            <select data-type="hotel" class='choices' id="hotel-choices">
+            </select>
+
+            <button data-action="add" class="btn btn-primary btn-circle pull-right add-IT-btn">+</button>
+            <!-- <script>
+              $('.add-IT-btn').on('click',function(){
+                var name=$('#hotel-choices option:selected')[0].value;
+                $('#hotel-list').append(
+                  '<div class="itinerary-item "> <span class="title">'+ name +'</span> <button class="btn btn-xs btn-danger remove btn-circle">x</button></div>'
+                )
+              });
+            </script> -->
+
+          </div>
+          <div>
+            <h4>Restaurants</h4>
+            <select data-type="restaurant" class='choices' id="restaurant-choices">
+
+            </select>
+            <button data-action="add" class="btn btn-primary btn-circle pull-right add-IT-btn">+</button>
+          </div>
+          <div>
+            <h4>Activities</h4>
+            <select data-type="activity" class='choices' id="activity-choices">
+
+            </select>
+            <button data-action="add" class="btn btn-primary btn-circle pull-right add-IT-btn">+</button>
+
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-6 col-sm-12">
+      <h3>
+        <span id="day-title">
+          <span id='day-num'>Day 1</span>
+          <button class="btn btn-xs btn-danger remove btn-circle" id='rm-day' value=1>x</button>
+        </span>
+      </h3>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <div class="day-buttons">
+            <button class="btn btn-circle day-btn num-btn" id="day-btn-1">1</button>
+            <!-- <button class="btn btn-circle day-btn current-day">2</button>
+            <button class="btn btn-circle day-btn">3</button> -->
+            <button class="btn btn-circle day-btn" id="day-add">+</button>
+            <!-- place holder for : for day in days  - or just manipulate the dom elem directly-->
+          </div>
+        </div>
+        <div class="panel-body" id="itinerary">
+          <div>
+            <h4>My Hotel</h4>
+            <ul class="list-group" id='Hotels'>
+              <!-- <div class="itinerary-item ">
+                <span class="title">Wyndham Grand Chicago Riverfront</span>
+                <button class="btn btn-xs btn-danger remove btn-circle">x</button>
+              </div> -->
+            </ul>
+          </div>
+          <div>
+            <h4>My Restaurants</h4>
+            <ul class="list-group" id='Restaurants'>
+              <div class="itinerary-item">
+                <!-- <span class="title">Alinea</span>
+                <button class="btn btn-xs btn-danger remove btn-circle">x</button> -->
+              </div>
+            </ul>
+          </div>
+          <div>
+            <h4>My Activities</h4>
+            <ul class="list-group" id='Activities'>
+              <div class="itinerary-item">
+                <!-- <span class="title">Shedd Aquarium</span>
+                <button class="btn btn-xs btn-danger remove btn-circle">x</button> -->
+              </div>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| -->
+<!-- ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| -->
+<!-- ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| -->
+
+<script>
+var hotels = {{ hotels | dump | safe }};
+var restaurants = {{ restaurants | dump | safe }};
+var activities = {{ activities | dump | safe }};
+var touristThingsObj={1:{Hotels:[],Restaurants:[],Activities:[]}};
+var day=1;//default
+
+
+var switchDay=function(daySwto){//!!!!SWITCH FUNCTION!!!!! (does the actual changing: switches day contents, as well as the the day variable!)
+  day=daySwto;
+  $('#day-num').text('Day '+day);//change text of day number from Day [previous day] to Day [switched day]
+  $('#rm-day').attr('value',day);//change value of day remove button from [previousday] to [switched day!]
+  // console.log('value of rm button changed to '+$('#rm-day').val());
+
+  $('.list-group').children().remove();//remove current touristy things for the previous (day before switch) day
+
+  var currentObj=touristThingsObj[day];//repopulate the touristy things for the new day (switched day)
+  for(var itinCat in currentObj){
+    for(var touristThing of currentObj[itinCat]){
+      $('#itinerary').children().find('#'+itinCat).append(
+          '<div class="itinerary-item "> <span class="title">'+ touristThing +'</span> <button class="btn btn-xs btn-danger remove btn-circle">x</button></div>'
+        )
+    }
+  }
+};
+
+for(hotel of hotels){
+  var name=hotel.name;
+  $('#hotel-choices').append('<option value="'+name+'">'+name+'</option>');
+}
+
+for(act of activities){
+  $('#activity-choices').append('<option value="'+act.name+'">'+act.name+'</option>');
+}
+
+for(rest of restaurants){
+  $('#restaurant-choices').append('<option value="'+rest.name+'">'+rest.name+'</option>');
+}
+
+
+$('.add-IT-btn').on('click',function(){
+
+  //Get the day -> index (index would day -1)
+  //Add to the touristThingsArr[index][itincat].push(thing to add)
+  var itinCat=$(this).siblings()[0].textContent;
+  var name=$(this).siblings('.choices')[0].value
+  touristThingsObj[day][itinCat].push(name);
+
+  $('#itinerary').children().find('#'+itinCat).append(
+      '<div class="itinerary-item "> <span class="title">'+ name +'</span> <button class="btn btn-xs btn-danger remove btn-circle">x</button></div>'
+    )
+});
+
+
+//for any current descendants and future descendants of .day-button, with class .num-btn, invoke switchDay() with the textcontent of
+//the button as the argument upon clicking
+$('.day-buttons').on('click','.num-btn',function(){
+  var daySwto=+$(this)[0].textContent;
+  switchDay(daySwto);
+})
+
+$('#itinerary').on('click','.remove',function(){
+ $(this).parent().remove();
+//  .index() and .data().  //for the map
+});
+
+$('#day-add').on('click',function(){
+  //YOU NEED TO FIX THIS... IT DOESNT WORK OF THERE IS NO DAY LEFT!!
+  var lastnum= $('.day-buttons .btn:nth-last-child(2)')[0] ? +$('.day-buttons .btn:nth-last-child(2)')[0].textContent : 0;
+  $('.day-buttons .btn:nth-last-child(2)').after('<button class="btn btn-circle day-btn num-btn" id="day-btn-'+(lastnum+1)+'">'+(lastnum+1)+'</button>');
+  // console.log('making this button: <button class="btn btn-circle day-btn num-btn id="day-btn-'+(lastnum+1)+'">'+(lastnum+1)+'</button>');
+
+  touristThingsObj[lastnum+1]={Hotels:[],Restaurants:[],Activities:[]};//ADDING NEW DAY OBJ TO TOURISTTHINGOBJ WITH NEW DAY (lastnum+1) AS KEY
+  var daySwto=lastnum+1;
+  switchDay(daySwto);
+});
+
+$('#rm-day').on('click',function(){
+  var daytoRm=+$('#rm-day').val();
+  delete touristThingsObj[daytoRm];//remove the object with index corresponding to the day from that array
+  $('.day-buttons').find('#day-btn-'+daytoRm).remove();
+  if(daytoRm === day){//if you are removing the day that you are currently on, switch day to the last day key in the object
+    var objkeys=Object.keys(touristThingsObj);//***If you really wanted to you can make it switch to the next key rather than last key
+    var lastkey=objkeys[objkeys.length-1];
+    switchDay(lastkey);
+  }
+})
+
+</script>
+
+
+{% endblock %}
