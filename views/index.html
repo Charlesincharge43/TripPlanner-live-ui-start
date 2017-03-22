@@ -7,6 +7,7 @@
 {% block content %}
 
 
+
 <div id="app" class="clearfix">
   <div class="map-container col-sm-8 col-lg-9">
     <div>
@@ -19,6 +20,7 @@
         <div class="panel-body" id="options-panel">
           <div>
             <h4>Hotels</h4>
+
 
 
             <select data-type="hotel" class='choices' id="hotel-choices">
@@ -110,13 +112,44 @@
 <!-- ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| -->
 <!-- ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| -->
 
-<script>
+<script>$(function deferThis (){ 
 var hotels = {{ hotels | dump | safe }};
 var restaurants = {{ restaurants | dump | safe }};
 var activities = {{ activities | dump | safe }};
+var dbObj={Hotels:hotels,Restaurants:restaurants,Activities:activities}
 var touristThingsObj={1:{Hotels:[],Restaurants:[],Activities:[]}};
 var day=1;//default
 
+
+
+var insert = function(name, type){
+  // removeMarker();
+
+  // drawMarker('activity', [41, -87]);
+  // drawMarker('restaurant', [43, -87]);
+  // drawMarker('activity', [41.8675766, -87.6162267])
+  // drawMarker('activity', [42, -87.6162267])
+dbObj[type].forEach(function(element){
+    if (element.name === name){
+    console.log(element.name);
+    var coords = element.place.location
+
+
+    drawMarker(type.toLowerCase(), coords);
+  }
+})
+
+}
+
+
+var refresh=function(day){
+  console.log(touristThingsObj)
+for (var key in touristThingsObj[day]){
+  for (var name of touristThingsObj[day][key]){
+    insert(name, key);
+  }
+}
+};
 
 var switchDay=function(daySwto){//!!!!SWITCH FUNCTION!!!!! (does the actual changing: switches day contents, as well as the the day variable!)
   day=daySwto;
@@ -134,11 +167,18 @@ var switchDay=function(daySwto){//!!!!SWITCH FUNCTION!!!!! (does the actual chan
         )
     }
   }
+  refresh(day);
 };
+
+
+
+
+
+
 
 for(hotel of hotels){
   var name=hotel.name;
-  $('#hotel-choices').append('<option value="'+name+'">'+name+'</option>');
+  $('#hotel-choices').append(`<option value="${name}">${name}</option>`);
 }
 
 for(act of activities){
@@ -161,6 +201,8 @@ $('.add-IT-btn').on('click',function(){
   $('#itinerary').children().find('#'+itinCat).append(
       '<div class="itinerary-item "> <span class="title">'+ name +'</span> <button class="btn btn-xs btn-danger remove btn-circle">x</button></div>'
     )
+
+  refresh(day);
 });
 
 
@@ -172,7 +214,16 @@ $('.day-buttons').on('click','.num-btn',function(){
 })
 
 $('#itinerary').on('click','.remove',function(){
+  var key = $(this).closest('.list-group').attr('id');
+  var name = ($(this).siblings('.title')[0].textContent);
+  var indexToRm = (touristThingsObj[day][key].indexOf(name));
+  touristThingsObj[day][key].splice(indexToRm,1);
+
+  refresh(day);
+
  $(this).parent().remove();
+
+// console.log($($(this).parent()).parent())
 //  .index() and .data().  //for the map
 });
 
@@ -197,7 +248,7 @@ $('#rm-day').on('click',function(){
     switchDay(lastkey);
   }
 })
-
+})
 </script>
 
 
